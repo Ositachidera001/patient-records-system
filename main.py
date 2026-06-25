@@ -150,7 +150,6 @@ def add_allergies(registry, nhis_number, *allergies):
     if not allergies:
         print(f"⚠️ No allergies provided for {patient['name']}.")
         return
-
     cleaned = [a.strip() for a in set(allergies) if a.strip()]
     existing = set(patient["allergies"])
     new_allergies = [a for a in cleaned if a not in existing]
