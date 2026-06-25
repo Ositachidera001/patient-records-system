@@ -150,10 +150,16 @@ def add_allergies(registry, nhis_number, *allergies):
     if not allergies:
         print(f"⚠️ No allergies provided for {patient['name']}.")
         return
-
     cleaned = [a.strip() for a in set(allergies) if a.strip()]
-    patient["allergies"].extend(set(cleaned))
-    print(f"✅ Added {len(cleaned)} allergy(ies) for {patient['name']}: {set(cleaned)}")
+    existing = set(patient["allergies"])
+    new_allergies = [a for a in cleaned if a not in existing]
+    skipped = len(cleaned) - len(new_allergies)
+    patient["allergies"].extend(new_allergies)
+
+    if new_allergies:
+        print(f"✅ Added {len(new_allergies)} new allergy(ies) for {patient['name']}: {new_allergies}")
+    if skipped:
+        print(f"⚠ {skipped} allergy(ies) already on record - skipped.")
 
 
 def update_patient_fields(registry, nhis_number, **fields):
