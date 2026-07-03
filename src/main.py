@@ -90,7 +90,7 @@ def view_patients(registry):
         status = "Admitted" if p["admission_status"] else "Discharged"
         allergy_note = f" | Allergies: {len(p.get('allergies', []))}"
         print(f" {nhis_number} | {p['name']} | Age {p['age']} | {p['ward']} | {p['triage'].upper()} | {status}{allergy_note}")
-    log_action(f"Viewed {registry}")
+    log_action(f"Staff viewed current active patient registry ({len(registry)} total records on file).")
 
 
 def register_new_patient(registry):
@@ -234,11 +234,11 @@ def transfer_to_new_ward(registry):
     if not patient:
         print("❌ Not Found.")
         return
-    
+    old_ward = patient["ward"].upper()
     new_ward = input(f"Current ward: {patient['ward']}. New Ward: ").strip().lower()
     patient["ward"] = new_ward
     print(f"✅ {patient['name']} transferred to {new_ward.title()}")
-    log_action(f"Transfered {patient['name']} from {patient['ward']} to {new_ward.title()}")
+    log_action(f"Transfered {patient['name']} from {old_ward} to {new_ward.upper()}")
     save_registry(registry)
 
 
@@ -301,7 +301,7 @@ def end_system(registry):
 def log_action(action_description):
     """Append a timestamped action to the medical audit log."""
     try:
-        timestamp = datetime.datetime.now().strftime("%Y-%M-%D %H:%M:%S")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open("data/audit_log.txt", "a") as f:
             f.write(f"[{timestamp}] {action_description}\n")
     except Exception as e:
