@@ -1,0 +1,31 @@
+{
+    "NHIS-001": {
+        "name": "udo peace",
+        "triage": "yellow",
+        "status": "Admitted",
+        "ward": "surgical",
+        "allergies": [
+            "nsaids"
+        ]
+    },
+    "NHIS-0002": {
+        "name": "cynthia ameh",
+        "triage": "yellow",
+        "status": "Admitted",
+        "ward": "labour",
+        "allergies": []
+    },
+    "NHIS-0003": {
+        "name": "eze joy",
+        "triage": "red",
+        "status": "Admitted",
+        "ward": "emergency",
+        "allergies": [
+            "hairs",
+            "ant",
+            "dust",
+            "penicilin",
+            "smoke"
+        ]
+    }
+}
