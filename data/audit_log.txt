@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 [2026-07-18 11:37:08] Registered EZE AMAKA JOY as NHIS-0001 to Labour Ward [Triage: YELLOW].
 [2026-07-18 11:39:02] Allergy update for NHIS-0001: added ['penicillin']
 [2026-07-18 11:40:09] Field update for NHIS-0001: {'triage': 'green'}
 [2026-07-18 11:41:02] Transferred NHIS-0001 from labour Ward to post-natal Ward.
 [2026-07-18 11:41:46] Discharged patient NHIS-0001.
 [2026-07-18 11:45:10] System shut down normally by user.
+=======
+[2026-22-07/03/26 20:22:59] System Quit. Auto save
+[2026-28-07/03/26 20:28:59] REGISTERED: Eze Samuel (NHIS-0001) to SURGICAL Ward. Allergies: ['penicillin']
+[2026-29-07/03/26 20:29:07] Viewed {'NHIS-0001': {'name': 'Eze Samuel', 'age': 32, 'nhis_number': 'NHIS-0001', 'ward': 'surgical', 'triage': 'yellow', 'admission_status': True, 'allergies': ['penicillin']}}
+[2026-07-03 20:46:54] Staff viewed current active patient registry (1 total records on file).
+[2026-07-03 20:48:06] REGISTERED: Idah Odoh (NHIS-0002) to CHILDREN Ward. Allergies: []
+[2026-07-03 20:48:16] Staff viewed current active patient registry (2 total records on file).
+>>>>>>> 8a81493dd72a849a0a0b9493c0457fb6cbb5b295

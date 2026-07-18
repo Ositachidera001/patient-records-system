@@ -11,14 +11,10 @@ and verifies that to_dict() -> from_dict() round-trips correctly.
 import sys
 import os
 
-# Put the PROJECT ROOT (the folder this file lives in) on sys.path, so
-# that "src" is importable as a package (it has src/__init__.py).
-# NOTE: this must be the project root, not the src/ folder itself —
-# `from src.models import ...` needs Python to find a package named
-# "src", which only works if the folder *containing* src/ is on the path.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Make sure "src" is importable when this file is run from the project root.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
-from src.models import Patient, PaediatricPatient, PatientRegistry  # noqa: E402
+from models import Patient, PaediatricPatient, PatientRegistry  # noqa: E402
 
 
 def section(title):
@@ -36,10 +32,10 @@ def main():
     # ------------------------------------------------------------------
     amina = Patient("amina bello", 34, "nhis-0001", "emergency", "red")
     ken = Patient("ken okafor", 45, "nhis-0002", "cardiology", "yellow")
-    print(amina)
-    print(ken)
-    print(repr(amina))
-    print(repr(ken))
+    print(amina)   # __str__
+    print(ken)     # __str__
+    print(repr(amina))  # __repr__
+    print(repr(ken))    # __repr__
 
     # ------------------------------------------------------------------
     section("2. admit() / discharge()")
@@ -54,7 +50,7 @@ def main():
     # ------------------------------------------------------------------
     added = amina.add_allergy("Penicillin", "Latex")
     print("Newly added:", added)
-    again = amina.add_allergy("Penicillin")
+    again = amina.add_allergy("Penicillin")  # duplicate, should not re-add
     print("Duplicate attempt added:", again)
     print("amina.allergies:", amina.allergies)
     print("ken.allergies (should be untouched):", ken.allergies)
@@ -75,7 +71,7 @@ def main():
     print("Rebuilt from dict:", repr(rebuilt_amina))
 
     assert rebuilt_amina.to_dict() == amina_dict, "Round-trip FAILED for Patient!"
-    print("✅ Patient round-trip verified.")
+    print("✅ Patient round-trip verified: to_dict() -> from_dict() -> to_dict() matches.")
 
     # ------------------------------------------------------------------
     section("6. PaediatricPatient SUBCLASS + calculate_dose()")
@@ -84,14 +80,17 @@ def main():
         "chidi okeke", 6, "nhis-0003", "paediatrics", "green",
         weight_kg=22, guardian_name="ngozi okeke",
     )
-    print(chidi)
-    print(repr(chidi))
-    print(chidi.calculate_dose(10))
+    print(chidi)          # overridden __str__
+    print(repr(chidi))    # overridden __repr__
 
+    print(chidi.calculate_dose(10))  # overridden method, uses chidi's own weight
+
+    # isinstance check to prove the IS-A relationship
     print("isinstance(chidi, Patient):", isinstance(chidi, Patient))
     print("isinstance(chidi, PaediatricPatient):", isinstance(chidi, PaediatricPatient))
     print("isinstance(amina, PaediatricPatient):", isinstance(amina, PaediatricPatient))
 
+    # Round-trip check for the subclass too
     chidi_dict = chidi.to_dict()
     rebuilt_chidi = PaediatricPatient.from_dict(chidi_dict)
     assert rebuilt_chidi.to_dict() == chidi_dict, "Round-trip FAILED for PaediatricPatient!"
@@ -104,13 +103,11 @@ def main():
     registry.add(amina)
     registry.add(ken)
     registry.add(chidi)
-    print(registry)
+    print(registry)  # __repr__
     print("len(registry):", len(registry))
 
     found = registry.find("nhis-0002")
     print("registry.find('nhis-0002'):", found)
-
-    print("Search 'oke':", [str(p) for p in registry.search_by_name("oke")])
 
     print("Census before discharge:", registry.census())
     registry.discharge("NHIS-0002")
