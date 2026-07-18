@@ -71,18 +71,18 @@ python test_models.py
 ## ⚙️ Menu Options
 
 | # | Action |
-|---|--------|
-| 1 | View all patients — table sorted RED → YELLOW → GREEN |
-| 2 | Register a new patient (auto NHIS ID, validated age & triage) |
-| 3 | Add allergies (deduplicated) |
-| 4 | Update patient name or triage level |
-| 5 | Transfer patient to a new ward |
-| 6 | Discharge patient |
-| 7 | Ward census + triage risk matrix (with timestamp) |
-| 8 | System status (registry size + data file check) |
-| 9 | Save and quit |
-| 10 ⭐ | Look up one patient's full details |
-| 11 ⭐ | Search patients by (partial) name |
+|--- |--------|
+| 1  | View all patients — table sorted RED → YELLOW → GREEN |
+| 2  | Register a new patient (auto NHIS ID, validated age & triage) |
+| 3  | Add allergies (deduplicated) |
+| 4  | Update patient name or triage level |
+| 5  | Transfer patient to a new ward |
+| 6  | Discharge patient |
+| 7  | Ward census + triage risk matrix (with timestamp) |
+| 8  | System status (registry size + data file check) |
+| 9  | Look up one patient's full details |
+| 10 | Search patients by (partial) name |
+| 11 | Save and quit |
 
 ## 🖥️ Sample Terminal Session (screenshot)
 
