@@ -1,198 +1,130 @@
 """
-models.py 
+test_models.py
 
-object-oriented core of the patient records system (from lesson 14)
+Standalone demonstration/verification script for src/models.py.
+Run with:  python test_models.py   (from the project root)
 
-Patient             -- one adult patient, with all clinical attributes. 
-PaediatricPatient   -- a patient subclass adding weight + gaurdian info.
-PatientRegistry     -- an OOP wrapper around a collection of Patients
+Creates Patient and PaediatricPatient instances, exercises every method,
+and verifies that to_dict() -> from_dict() round-trips correctly.
 """
 
-class Patient:
-    """Represents a single hospital patient with all clinical attributes."""
-    def __init__(self, name, age, nhis_number, ward, triage):
-        """constructor - runs automatically when a patient is called"""
-        self.name = name.strip().title()
-        self.age = age
-        self.nhis_number = nhis_number.strip().upper()
-        self.ward = ward.strip().lower()
-        self.triage = triage.strip().lower() # stored lower to match config.TRIAGE_RANK cases sensivity
-        self.admission_status = True
-        self.allergies = []
+import sys
+import os
 
-    def __str__(self):
-        """Human - readable summary -- what print(patient shows."""
-        status = "Admitted" if self.admission_status else "Discharged"
-        return (f"[{self.nhis_number}] {self.name} | {self.ward.title()} "
-                f"| {self.triage.upper()} | {status}")
+# Put the PROJECT ROOT (the folder this file lives in) on sys.path, so
+# that "src" is importable as a package (it has src/__init__.py).
+# NOTE: this must be the project root, not the src/ folder itself —
+# `from src.models import ...` needs Python to find a package named
+# "src", which only works if the folder *containing* src/ is on the path.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-    def __repr__(self):
-        """Developer-facing representation -- enough detail to reconstruct the object."""
-        return (f"Patient(name={self.name!r}, age={self.age!r}, "
-                f"nhis_number={self.nhis_number!r}, ward={self.ward!r}, "
-                f"triage={self.triage!r})")
+from src.models import Patient, PaediatricPatient, PatientRegistry  # noqa: E402
 
-    # build the methods from the previous functions
-    def admit(self):
-        """Mark this patient as admitted."""
-        self.admission_status = True
-        print(f"✅ {self.name} admitted.")
 
-    def discharge(self):
-        """Mark this patient as admitted."""
-        self.admission_status = False
-        print(f"🟠 {self.name} discharged.")
+def section(title):
+    """Print a labelled section divider so terminal output is easy to scan."""
+    print("\n" + "=" * 60)
+    print(title)
+    print("=" * 60)
 
-    def add_allergy(self, *new_allergies):
-        """Add one or more allergies to this patient's record
-        skipping duplicates uses *args so callers can pass any number of allergies
-        Returns the list of allergies that were actually newly added."""
-        existing = set(self.allergies)
-        added = [allergy.strip() for allergy in new_allergies if allergy.strip() not in existing]
-        self.allergies.extend(added)
-        return added
-    
-    def transfer(self, new_ward):
-        """Move this patients to a new ward"""
-        old_ward = self.ward
-        self.ward = new_ward.strip().lower()
-        print(f"✅ {self.name} transferred from: {old_ward} to {self.ward}.")
 
-    def summary(self):
-        """Return a formatted one-line summary of this patient."""
-        status = "Admitted" if self.admission_status else "Discharged"
-        return (f"{self.nhis_number} | {self.name:20} | {self.triage.upper():6} "
-                f"| {status:10} | {self.ward:12} | {self.allergies}")
-    
-    def to_dict(self):
-        """Convert this patient to a plain dictionary (for JSON saving)."""
-        return {
-            "name" : self.name,
-            "age"  : self.age,
-            "nhis_number"  : self.nhis_number,
-            "ward"  : self.ward,
-            "triage"  : self.triage,
-            "admission_status"  : self.admission_status,
-            "allergies"  : self.allergies
-        }
-    @classmethod
-    def from_dict(cls, data):
-        """Create a patient instance from a dictionary (for JSON loading)"""
-        p = cls(data["name"], data["age"], data["nhis_number"], data["ward"], data["triage"])
-        p.admission_status = data.get("admission_status", True)
-        p.allergies = data.get("allergies", [])
-        return p
-    
-class PaediatricPatient(Patient):
-    """A child patient. is a Patient, with extra weight and guardian tracking."""
+def main():
+    """Run through every required demonstration in order."""
 
-    def __init__(self, name, age, nhis_number, ward, triage, weight_kg, guardian_name):
-        """Build a PaediatricPatient, reusing Patient's setup via super()."""
-        super().__init__(name, age, nhis_number, ward, triage)
-        self.weight_kg = weight_kg
-        self.guardian_name = guardian_name.strip().title()
+    # ------------------------------------------------------------------
+    section("1. CREATE TWO PATIENT INSTANCES")
+    # ------------------------------------------------------------------
+    amina = Patient("amina bello", 34, "nhis-0001", "emergency", "red")
+    ken = Patient("ken okafor", 45, "nhis-0002", "cardiology", "yellow")
+    print(amina)
+    print(ken)
+    print(repr(amina))
+    print(repr(ken))
 
-    def __str__(self):
-        """Human-readable summary that also shows the guardian's name."""
-        status = "Admitted" if self.admission_status else "Discharged"
-        return (f"[PAED][{self.nhis_number}] {self.name} | Guardian: {self.guardian_name} "
-                f"| {self.ward.title()} | {self.triage.upper()} | {status}")
- 
-    def __repr__(self):
-        """Developer-facing representation including the paediatric-only fields."""
-        return (f"PaediatricPatient(name={self.name!r}, age={self.age!r}, "
-                f"nhis_number={self.nhis_number!r}, ward={self.ward!r}, "
-                f"triage={self.triage!r}, weight_kg={self.weight_kg!r}, "
-                f"guardian_name={self.guardian_name!r})")
-    
-    def calculate_dose(self, drug_mg_per_kg):
-        """
-Override of a weight-based dose calculation that uses THIS patient's own weight.
-Args:
-drug_mg_per_kg (float): dosage rate in mg per kilogram of body weight.
-Returns:
-str: a formatted dose string, e.g. "220.0 mg for Chidi Okeke (22kg)".
-"""
-        dose = drug_mg_per_kg * self.weight_kg
-        return f"{dose:.1f} mg for {self.name} ({self.weight_kg}kg)"
-    
-    def to_dict(self):
-        """convert this paediatric patient to a dict, including paediatric-only fields."""
-        data = super().to_dict()
-        data["weight_kg"] = self.weight_kg
-        data["guardian_name"] = self.guardian_name
-        return data
-    
-    @classmethod
-    def from_dict(cls, data):
-        """Build a PaediatricPatient instance from a dictionary (for json loading)."""
-        p = cls(data["name"], data["age"], data["nhis_number"], data["ward"], data["triage"], data["weight_kg"], data["guardian_name"])
-        p.admission_status = data.get("admission_status", True)
-        p.allergies = data.get("allergies", [])
-        return p
-    
-class PatientRegistry:
-    """Wraps a collection of patient objects and offers registry-level operations. 
-    this is an object-oriented analogue of the plain 'registry' dict used previous"""
-    def __init__(self):
-        """start with an empty registry, keyed by nhis_number."""
-        self._patients = {}
+    # ------------------------------------------------------------------
+    section("2. admit() / discharge()")
+    # ------------------------------------------------------------------
+    amina.discharge()
+    print(amina)
+    amina.admit()
+    print(amina)
 
-    def add(self, patient):
-        """Add a patient (adult or padiatric) to the registry, keyed by its nhis_number"""
-        self._patients[patient.nhis_number] = patient
-        print(f"✅ {patient.name} added to registry as {patient.nhis_number}.")
+    # ------------------------------------------------------------------
+    section("3. add_allergy(*allergies)")
+    # ------------------------------------------------------------------
+    added = amina.add_allergy("Penicillin", "Latex")
+    print("Newly added:", added)
+    again = amina.add_allergy("Penicillin")
+    print("Duplicate attempt added:", again)
+    print("amina.allergies:", amina.allergies)
+    print("ken.allergies (should be untouched):", ken.allergies)
 
-    def find(self, nhis_number):
-        """Look up a patient by nhis number. Returns none if not found."""
-        return self._patients.get(nhis_number.strip().upper())
+    # ------------------------------------------------------------------
+    section("4. transfer(new_ward)")
+    # ------------------------------------------------------------------
+    ken.transfer("icu")
+    print(ken)
 
-    def search_by_name(self, query):
-        """A partial, case-insensitive search by patient name.
-        
-        returns a list of matching patient (or paediatricpatient) objects"""
+    # ------------------------------------------------------------------
+    section("5. to_dict() / from_dict() ROUND TRIP")
+    # ------------------------------------------------------------------
+    amina_dict = amina.to_dict()
+    print("amina.to_dict():", amina_dict)
 
-        query = query.strip().lower()
-        return [p for p in self._patients.values() if query in p.name.lower()]
+    rebuilt_amina = Patient.from_dict(amina_dict)
+    print("Rebuilt from dict:", repr(rebuilt_amina))
 
-    def discharge(self, nhis_number):
-        """Discharge the patient with the given nhis_number, if they exist."""
-        patient = self.find(nhis_number)
-        if patient is None:
-            print(f"❌ No patient found with NHIS number {nhis_number}.")
-            return False
-        patient.discharge()
-        return True
-    
-    def census(self):
-        """Return a dict of {ward: count_of_currently_admitted_patients}."""
-        wards = {}
-        for patient in self._patients.values():
-            if patient.admission_status:
-                wards[patient.ward] = wards.get(patient.ward, 0) + 1
-        return wards
-    
-    def to_dict(self):
-        """convert the whole registry into a plain dict of dicts (for JSON saving)."""
-        return {nhis: patient.to_dict() for nhis, patient in self._patients.items()}
-    
-    @classmethod
-    def from_dict(cls, data):
-        """Rebuild a PatientRegistry from a dict of dicts (for JSON loading).
-        Records conataining a 'weight_kg' field are restored as PaediatricPatient; everything else is restored as plain patient."""
-        registry = cls()
-        for nhis, patient_data in data.items():
-            if "weight_kg" in patient_data:
-                patient = PaediatricPatient.from_dict(patient_data)
-            else:
-                patient = Patient.from_dict(patient_data)
-            registry._patients[nhis] = patient
-        return registry
-        
-    def __len__(self):
-        """Number of patients currently in the registry. Enables len(registry)."""
-        return len(self._patients)
-    
-    def __repr__(self):
-        """Developer representation showing how many patients are registereed."""
-        return f"PatientRegistry({len(self._patients)} patients)"
+    assert rebuilt_amina.to_dict() == amina_dict, "Round-trip FAILED for Patient!"
+    print("✅ Patient round-trip verified.")
+
+    # ------------------------------------------------------------------
+    section("6. PaediatricPatient SUBCLASS + calculate_dose()")
+    # ------------------------------------------------------------------
+    chidi = PaediatricPatient(
+        "chidi okeke", 6, "nhis-0003", "paediatrics", "green",
+        weight_kg=22, guardian_name="ngozi okeke",
+    )
+    print(chidi)
+    print(repr(chidi))
+    print(chidi.calculate_dose(10))
+
+    print("isinstance(chidi, Patient):", isinstance(chidi, Patient))
+    print("isinstance(chidi, PaediatricPatient):", isinstance(chidi, PaediatricPatient))
+    print("isinstance(amina, PaediatricPatient):", isinstance(amina, PaediatricPatient))
+
+    chidi_dict = chidi.to_dict()
+    rebuilt_chidi = PaediatricPatient.from_dict(chidi_dict)
+    assert rebuilt_chidi.to_dict() == chidi_dict, "Round-trip FAILED for PaediatricPatient!"
+    print("✅ PaediatricPatient round-trip verified.")
+
+    # ------------------------------------------------------------------
+    section("7. BONUS: PatientRegistry")
+    # ------------------------------------------------------------------
+    registry = PatientRegistry()
+    registry.add(amina)
+    registry.add(ken)
+    registry.add(chidi)
+    print(registry)
+    print("len(registry):", len(registry))
+
+    found = registry.find("nhis-0002")
+    print("registry.find('nhis-0002'):", found)
+
+    print("Search 'oke':", [str(p) for p in registry.search_by_name("oke")])
+
+    print("Census before discharge:", registry.census())
+    registry.discharge("NHIS-0002")
+    print("Census after discharging ken:", registry.census())
+
+    registry_dict = registry.to_dict()
+    rebuilt_registry = PatientRegistry.from_dict(registry_dict)
+    assert rebuilt_registry.to_dict() == registry_dict, "Round-trip FAILED for PatientRegistry!"
+    print("✅ PatientRegistry round-trip verified.")
+    print("Rebuilt registry contains a PaediatricPatient for NHIS-0003:",
+          isinstance(rebuilt_registry.find("NHIS-0003"), PaediatricPatient))
+
+    section("ALL CHECKS PASSED ✅")
+
+
+if __name__ == "__main__":
+    main()
