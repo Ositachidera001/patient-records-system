@@ -1,0 +1,14 @@
+{
+    "NHIS-0001": {
+        "name": "Eze Amaka Joy",
+        "age": 27,
+        "nhis_number": "NHIS-0001",
+        "ward": "post-natal",
+        "triage": "green",
+        "admission_status": false,
+        "allergies": [
+            "NSAIDS",
+            "penicillin"
+        ]
+    }
+}

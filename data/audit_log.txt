@@ -1,0 +1,6 @@
+[2026-07-18 11:37:08] Registered EZE AMAKA JOY as NHIS-0001 to Labour Ward [Triage: YELLOW].
+[2026-07-18 11:39:02] Allergy update for NHIS-0001: added ['penicillin']
+[2026-07-18 11:40:09] Field update for NHIS-0001: {'triage': 'green'}
+[2026-07-18 11:41:02] Transferred NHIS-0001 from labour Ward to post-natal Ward.
+[2026-07-18 11:41:46] Discharged patient NHIS-0001.
+[2026-07-18 11:45:10] System shut down normally by user.
