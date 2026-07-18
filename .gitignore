@@ -1,18 +1,5 @@
-Python
-pycache/
+__pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
-Virtual environments
-venv/
-env/
-.env
-IDE
-.vscode/
-.idea/
-OS files
+src/data/registry.json
+src/data/audit_log.txt
 .DS_Store
-Thumbs.db
-OneDrive temp files
-*.tmp
