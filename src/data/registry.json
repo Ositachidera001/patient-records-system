@@ -1,31 +1,35 @@
 {
-    "NHIS-001": {
-        "name": "udo peace",
-        "triage": "yellow",
-        "status": "Admitted",
-        "ward": "surgical",
+    "NHIS-0001": {
+<<<<<<< HEAD
+        "name": "Eze Amaka Joy",
+        "age": 27,
+        "nhis_number": "NHIS-0001",
+        "ward": "post-natal",
+        "triage": "green",
+        "admission_status": false,
         "allergies": [
-            "nsaids"
+            "NSAIDS",
+            "penicillin"
+        ]
+=======
+        "name": "Eze Samuel",
+        "age": 32,
+        "nhis_number": "NHIS-0001",
+        "ward": "surgical",
+        "triage": "yellow",
+        "admission_status": true,
+        "allergies": [
+            "penicillin"
         ]
     },
     "NHIS-0002": {
-        "name": "cynthia ameh",
+        "name": "Idah Odoh",
+        "age": 12,
+        "nhis_number": "NHIS-0002",
+        "ward": "children",
         "triage": "yellow",
-        "status": "Admitted",
-        "ward": "labour",
+        "admission_status": true,
         "allergies": []
-    },
-    "NHIS-0003": {
-        "name": "eze joy",
-        "triage": "red",
-        "status": "Admitted",
-        "ward": "emergency",
-        "allergies": [
-            "hairs",
-            "ant",
-            "dust",
-            "penicilin",
-            "smoke"
-        ]
+>>>>>>> 8a81493dd72a849a0a0b9493c0457fb6cbb5b295
     }
 }

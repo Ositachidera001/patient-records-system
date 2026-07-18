@@ -14,7 +14,7 @@ import os
 # Make sure "src" is importable when this file is run from the project root.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
-from src.models import Patient, PaediatricPatient, PatientRegistry  # noqa: E402
+from models import Patient, PaediatricPatient, PatientRegistry  # noqa: E402
 
 
 def section(title):

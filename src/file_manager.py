@@ -1,14 +1,24 @@
+"""
+file_manager.py
+
+Handles all reading/writing to disk: the patient registry (JSON) and the 
+audit log (plain text). Every function here fails *safely* - errors are
+caught, reported, and the program keeps running instead of crashing.
+"""
+
 import json
 import datetime
 import os
 
-from config import registry_file, audit_log_file
+from config import registry_file, audit_log_file, DATA_DIR
 
-# Create data directory if it doesn't exist
-os.makedirs(os.path.dirname(registry_file), exist_ok=True)
+# Create data/ directory up front so save_registry() and log_action()
+# never fail just because the folder dosen't exist yet.
+os.makedirs(DATA_DIR, exist_ok=True)
 
 def save_registry(registry, filepath=registry_file):
-    """Save the patient registry to a JSON file"""
+    """Save the patient registry to a JSON file
+    Returns True/False on success."""
     try:
         with open(filepath, "w") as f:
             json.dump(registry, f, indent=4)
@@ -23,7 +33,8 @@ def save_registry(registry, filepath=registry_file):
 
 def load_registry(filepath=registry_file):
     """Load the patient registry from a JSON file.
-    return an empty dict if the file doesn't exist yet"""
+    return an empty dict if the file doesn't exist yet or exists but corrupted.
+    either way, the app starts without crashing."""
     try:
         with open(filepath, "r") as f:
             registry = json.load(f)
@@ -40,7 +51,8 @@ def load_registry(filepath=registry_file):
         return {}
   
 def log_action(action_description):
-    """Append a timestamped action to the medical audit log."""
+    """Append a timestamped action to the medical audit log. 
+    returns True/False"""
     try:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(audit_log_file, "a") as f:

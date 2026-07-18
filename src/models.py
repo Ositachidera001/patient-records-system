@@ -1,3 +1,13 @@
+"""
+models.py 
+
+object-oriented core of the patient records system (from lesson 14)
+
+Patient             -- one adult patient, with all clinical attributes. 
+PaediatricPatient   -- a patient subclass adding weight + gaurdian info.
+PatientRegistry     -- an OOP wrapper around a collection of Patients
+"""
+
 class Patient:
     """Represents a single hospital patient with all clinical attributes."""
     def __init__(self, name, age, nhis_number, ward, triage):
@@ -6,13 +16,13 @@ class Patient:
         self.age = age
         self.nhis_number = nhis_number.strip().upper()
         self.ward = ward.strip().lower()
-        self.triage = triage.strip().upper()
+        self.triage = triage.strip().lower() # stored lower to match config.TRIAGE_RANK cases sensivity
         self.admission_status = True
         self.allergies = []
 
     def __str__(self):
         """Human - readable summary -- what print(patient shows."""
-        status = "Admitted" if self.admission_status else "Discharge"
+        status = "Admitted" if self.admission_status else "Discharged"
         return (f"[{self.nhis_number}] {self.name} | {self.ward.title()} "
                 f"| {self.triage.upper()} | {status}")
 
@@ -34,7 +44,9 @@ class Patient:
         print(f"🟠 {self.name} discharged.")
 
     def add_allergy(self, *new_allergies):
-        """Add one or more allergies to this patient's record"""
+        """Add one or more allergies to this patient's record
+        skipping duplicates uses *args so callers can pass any number of allergies
+        Returns the list of allergies that were actually newly added."""
         existing = set(self.allergies)
         added = [allergy.strip() for allergy in new_allergies if allergy.strip() not in existing]
         self.allergies.extend(added)
@@ -134,7 +146,15 @@ class PatientRegistry:
     def find(self, nhis_number):
         """Look up a patient by nhis number. Returns none if not found."""
         return self._patients.get(nhis_number.strip().upper())
-    
+
+    def search_by_name(self, query):
+        """A partial, case-insensitive search by patient name.
+        
+        returns a list of matching patient (or paediatricpatient) objects"""
+
+        query = query.strip().lower()
+        return [p for p in self._patients.values() if query in p.name.lower()]
+
     def discharge(self, nhis_number):
         """Discharge the patient with the given nhis_number, if they exist."""
         patient = self.find(nhis_number)

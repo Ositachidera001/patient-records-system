@@ -1,6 +1,0 @@
-[2026-22-07/03/26 20:22:59] System Quit. Auto save
-[2026-28-07/03/26 20:28:59] REGISTERED: Eze Samuel (NHIS-0001) to SURGICAL Ward. Allergies: ['penicillin']
-[2026-29-07/03/26 20:29:07] Viewed {'NHIS-0001': {'name': 'Eze Samuel', 'age': 32, 'nhis_number': 'NHIS-0001', 'ward': 'surgical', 'triage': 'yellow', 'admission_status': True, 'allergies': ['penicillin']}}
-[2026-07-03 20:46:54] Staff viewed current active patient registry (1 total records on file).
-[2026-07-03 20:48:06] REGISTERED: Idah Odoh (NHIS-0002) to CHILDREN Ward. Allergies: []
-[2026-07-03 20:48:16] Staff viewed current active patient registry (2 total records on file).
