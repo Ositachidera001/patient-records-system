@@ -240,7 +240,7 @@ def transfer_to_new_ward(registry):
     registry[nhis_id]["ward"] = new_ward
     if save_registry(registry):
         log_action(f"Transferred {nhis_id} from {old_ward} Ward to {new_ward} Ward.")
-        print(f"✅ Transferred to {new_ward} Ward.")
+        print(f"✅ Transferred from {old_ward} to {new_ward} Ward.")
 
 
 def discharge_patient(registry):
