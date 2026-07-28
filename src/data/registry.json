@@ -1,35 +1,13 @@
 {
     "NHIS-0001": {
-<<<<<<< HEAD
-        "name": "Eze Amaka Joy",
-        "age": 27,
+        "name": "Adams Maryjoy",
+        "age": 26,
         "nhis_number": "NHIS-0001",
-        "ward": "post-natal",
-        "triage": "green",
-        "admission_status": false,
-        "allergies": [
-            "NSAIDS",
-            "penicillin"
-        ]
-=======
-        "name": "Eze Samuel",
-        "age": 32,
-        "nhis_number": "NHIS-0001",
-        "ward": "surgical",
+        "ward": "labour",
         "triage": "yellow",
         "admission_status": true,
         "allergies": [
-            "penicillin"
+            "dust"
         ]
-    },
-    "NHIS-0002": {
-        "name": "Idah Odoh",
-        "age": 12,
-        "nhis_number": "NHIS-0002",
-        "ward": "children",
-        "triage": "yellow",
-        "admission_status": true,
-        "allergies": []
->>>>>>> 8a81493dd72a849a0a0b9493c0457fb6cbb5b295
     }
 }
