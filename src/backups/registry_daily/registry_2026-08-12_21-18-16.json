@@ -1,0 +1,13 @@
+{
+    "NHIS-0001": {
+        "name": "Adams Maryjoy",
+        "age": 26,
+        "nhis_number": "NHIS-0001",
+        "ward": "labour",
+        "triage": "yellow",
+        "admission_status": true,
+        "allergies": [
+            "dust"
+        ]
+    }
+}

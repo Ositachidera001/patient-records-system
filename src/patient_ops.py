@@ -15,11 +15,17 @@ models.py:
 import datetime
 import os
 
+from pathlib import Path
+
 from config import WIDTH, TRIAGE_INFO, VALID_TRIAGE_COLOURS, registry_file
-from file_manager import save_registry, log_action
+from file_manager import save_registry, log_action, backup_registry, full_backup, archive_old_backups, get_disk_status
 from models import Patient, PaediatricPatient
 from utils import print_patient_table
 
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR / "data"
+REGISTRY_FILE = DATA_DIR / "registry.json"
+BACKUP_ROOT = BASE_DIR / "backups"
 
 def safe_int_input(prompt):
     """Force a valid integer selection, retrying forever on bad input.
@@ -309,6 +315,7 @@ def system_status(registry):
     if os.path.exists(registry_file):
         size = os.path.getsize(registry_file)
         print(f"📄 Data file OK: {registry_file} ({size} bytes)")
+        get_disk_status(BASE_DIR)
     else:
         print(f"⚠️ Data file not found yet at {registry_file} — it will be created on first save.")
 
@@ -317,6 +324,18 @@ def end_system(registry):
     """Option 9: save the registry, log the shutdown, and exit."""
     print("\nClosing down... saving final state.")
     save_registry(registry)
+
+    # backup single registry JSON file 
+    backup_registry(REGISTRY_FILE, BACKUP_ROOT / "registry_daily")
+
+    # backup entire data folder after 30 days.
+    if len(os.listdir(BACKUP_ROOT/"registry_daily")) >= 1:  # changed to 1 so i can get a full backup
+        full_backup(DATA_DIR, BACKUP_ROOT)
+
+    # Archive older backups (keep 3 latest)
+    if len(os.listdir(BACKUP_ROOT)) >= 3:
+        archive_old_backups(BACKUP_ROOT, keep_latest=3)
+
     log_action("System shut down normally by user.")
     print("👋 System offline.")
     exit()
