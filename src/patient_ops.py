@@ -94,7 +94,7 @@ def register_new_patient(registry):
         else:
             birth_date_str = date_input
             age, date_of_birth = calculate_patient_age(birth_date_str)
-            print(f"Age of {name.title()}: {age}years. Date of Birth: {birth_date_str} ")
+            print(f"Age of {name.title()}: {age}years. Date of Birth: {date_of_birth} ")
             break
 
 
