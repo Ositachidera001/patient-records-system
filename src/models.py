@@ -14,10 +14,11 @@ PatientRegistry     -- an OOP wrapper around a collection of Patients
 class Patient:
     """Represents a single hospital patient with all clinical attributes."""
 
-    def __init__(self, name, age, nhis_number, ward, triage):
+    def __init__(self, name, age, date_of_birth, nhis_number, ward, triage):
         """Constructor — runs automatically when Patient(...) is called."""
         self.name = name.strip().title()
         self.age = age
+        self.date_of_birth = date_of_birth
         self.nhis_number = nhis_number.strip().upper()
         self.ward = ward.strip().lower()
         # Stored lowercase to match config.TRIAGE_RANK / TRIAGE_INFO / VALID_TRIAGE_COLOURS
@@ -79,6 +80,7 @@ class Patient:
         return {
             "name": self.name,
             "age": self.age,
+            "date_of_birth" : self.date_of_birth,
             "nhis_number": self.nhis_number,
             "ward": self.ward,
             "triage": self.triage,
@@ -89,7 +91,7 @@ class Patient:
     @classmethod
     def from_dict(cls, data):
         """Create a Patient instance from a dictionary (for JSON loading)."""
-        p = cls(data["name"], data["age"], data["nhis_number"], data["ward"], data["triage"])
+        p = cls(data["name"], data["age"], data["date_of_birth"], data["nhis_number"], data["ward"], data["triage"])
         p.admission_status = data.get("admission_status", True)
         p.allergies = data.get("allergies", [])
         return p
@@ -98,9 +100,9 @@ class Patient:
 class PaediatricPatient(Patient):
     """A child patient. IS-A Patient, with extra weight and guardian tracking."""
 
-    def __init__(self, name, age, nhis_number, ward, triage, weight_kg, guardian_name):
+    def __init__(self, name, age, date_of_birth, nhis_number, ward, triage, weight_kg, guardian_name):
         """Build a PaediatricPatient, reusing Patient's setup via super()."""
-        super().__init__(name, age, nhis_number, ward, triage)
+        super().__init__(name, age, date_of_birth, nhis_number, ward, triage)
         self.weight_kg = weight_kg
         self.guardian_name = guardian_name.strip().title()
 
@@ -138,7 +140,7 @@ class PaediatricPatient(Patient):
     @classmethod
     def from_dict(cls, data):
         """Build a PaediatricPatient instance from a dictionary (for JSON loading)."""
-        p = cls(data["name"], data["age"], data["nhis_number"], data["ward"], data["triage"],
+        p = cls(data["name"], data["age"], data["date_of_birth"], data["nhis_number"], data["ward"], data["triage"],
                  data["weight_kg"], data["guardian_name"])
         p.admission_status = data.get("admission_status", True)
         p.allergies = data.get("allergies", [])

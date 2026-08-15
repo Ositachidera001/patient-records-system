@@ -12,7 +12,7 @@ models.py:
         "triage": str, "admission_status": bool, "allergies": [str, ...]
     }
 """
-import datetime
+from datetime import datetime, date, timedelta
 import os
 
 from pathlib import Path
@@ -20,7 +20,7 @@ from pathlib import Path
 from config import WIDTH, TRIAGE_INFO, VALID_TRIAGE_COLOURS, registry_file
 from file_manager import save_registry, log_action, backup_registry, full_backup, archive_old_backups, get_disk_status
 from models import Patient, PaediatricPatient
-from utils import print_patient_table
+from utils import print_patient_table, calculate_patient_age
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -76,16 +76,27 @@ def register_new_patient(registry):
         print("❌ Registration failed: a name is required.")
         return
 
-    # --- age: validated with a custom business-rule exception ---------
     while True:
-        try:
-            age = int(input("Enter Patient Age: ").strip())
-            if age < 0 or age > 130:
-                # Custom business rule: not a Python TypeError, a rule WE define.
-                raise ValueError("age must be between 0 and 130.")
+        # optional collection and validation of date of birth
+        date_input = str(input("Enter Patient Date of Birth (YYYY-MM-DD): click enter to skip: ").strip())
+        if date_input == "":
+            birth_date_str = "Not Provided"
+            date_of_birth = birth_date_str
+            try:
+                age = int(input("Enter Patient Age: ").strip())
+                if age < 0 or age > 130:
+                    # Custom business rule: not a Python TypeError, a rule WE define.
+                    raise ValueError("age must be between 0 and 130.")
+                print(f"Age of {name.title()}: {age}years. Date of Birth: Not Provided ⚠")
+                break
+            except ValueError as e:
+                print(f"❌ Invalid age — {e}")
+        else:
+            birth_date_str = date_input
+            age, date_of_birth = calculate_patient_age(birth_date_str)
+            print(f"Age of {name.title()}: {age}years. Date of Birth: {birth_date_str} ")
             break
-        except ValueError as e:
-            print(f"❌ Invalid age — {e}")
+
 
     print("\nTriage Options:")
     for color, desc in TRIAGE_INFO.items():
@@ -106,7 +117,7 @@ def register_new_patient(registry):
     nhis_id = generate_next_nhis(registry)
 
     # --- build the actual OOP Patient object -------------------------
-    patient = Patient(name, age, nhis_id, ward, triage)
+    patient = Patient(name, age, date_of_birth, nhis_id, ward, triage)
     if allergies:
         patient.add_allergy(*allergies)
 
@@ -115,7 +126,7 @@ def register_new_patient(registry):
 
     if save_registry(registry):
         log_action(f"Registered {name.upper()} as {nhis_id} to {ward.title()} "
-                    f"Ward [Triage: {triage.upper()}].")
+                    f"Ward [Triage: {triage.upper()}] Age: {age}, DoB: {date_of_birth}.")
         print(f"\n✅ Registered. Patient {name.upper()} assigned ID: {nhis_id}")
 
 
@@ -304,7 +315,7 @@ def census_summary(registry):
         print(f"  🟡 [YELLOW] Urgent  : {triage_counts['yellow']}")
         print(f"  🟢 [GREEN] Routine  : {triage_counts['green']}")
     finally:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().strftime("%A, %d %B %Y at %H:%M:%S")
         print(f"\n🕒 Report generated: {timestamp}")
         print("=" * WIDTH)
 
@@ -318,6 +329,37 @@ def system_status(registry):
         get_disk_status(BASE_DIR)
     else:
         print(f"⚠️ Data file not found yet at {registry_file} — it will be created on first save.")
+
+def schedule_appointment(registry) -> bool:
+    """computes an appointment date 'days_from_now' into the future and stores it in 
+    the patient's record."""
+    nhis_number = str(input("Enter Patient's NHIS number"))
+    if nhis_number not in registry:
+        print(f" Patient with NHIS {nhis_number} not found.")
+        return False
+    while True:
+        try:
+            appointment_date = str(input("Enter appointment date (YYYY-MM-DD) or click Enter to enter Number of days instead: "))
+            if appointment_date == "":
+                days_from_now = safe_int_input("Enter number of days: ")
+                # calcuate future date using timedelta
+                future_date = date.today() + timedelta(days=days_from_now)
+            else:
+                appointment_date_formatted = datetime.strptime(appointment_date, "%Y-%m-%d").date()
+                days_from_now = (appointment_date_formatted - date.today()).days
+                # use inputted appointment date
+                future_date = appointment_date_formatted
+
+            # format to human-readable string
+            formatted_date = f"{future_date.strftime('%A, %d %B %Y.')} {days_from_now} days from today: - {date.today()}" # e.g "Friday, 28 August 2026"
+
+            # store on patient record
+            registry[nhis_number]["appointment_date"] = formatted_date
+            print(f"✅ Appointment scheduled for {registry[nhis_number]["name"]} on {formatted_date}.")
+            return True
+        except ValueError:
+            print(f"Invalid date format '{appointment_date}' -- usr YYYY-MM-DD")
+            continue
 
 
 def end_system(registry):

@@ -5,6 +5,8 @@ Shared display/formatting helpers. Kept separate from patient_ops.py so
 that "how do we show a patient" is decoupled from "what menu action are
 we running" — a classic separation-of-concerns split.
 """
+from datetime import datetime, date
+
 from config import TRIAGE_RANK
 
 
@@ -55,3 +57,54 @@ def print_patient_table(registry, width=60):
         ))
 
     print(sep)
+
+def calculate_patient_age(birth_date_str : str) -> tuple[int, str]:
+    """calculate's patient's age in whole years from a date string YYYY-MM-DD.
+    And returns both age and the orignial  dob string. returns (0, "Not Provided")
+    if birth_date_str is empty.
+    """
+    if not birth_date_str:
+        return 0, "Not Provided"
+    try:
+        birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d").date()
+        today = date.today()
+        age = today.year - birth_date.year
+
+        # adjustment if birthday hasn't happened yet this year.
+        birthday_this_year = birth_date.replace(year=today.year)
+        # if today < birthday_this_year:
+        #     age -= 1
+        # return age
+        return age -1, birth_date_str if today < birthday_this_year else age
+    except ValueError:
+        raise ValueError(f"Invalid date format '{birth_date_str}' -- usr YYYY-MM-DD")
+
+def check_drug_expiry(drug_name: str, expiry_str: str) -> int:
+    """Returns days remaining for a drug.
+    Prints color-coded warnings based on status.
+    """
+    try:
+        expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d").date()
+        days_left = (expiry_date - date.today()).days
+
+        if days_left < 0:
+            print(f"🔴 Expired: {drug_name} expired {abs(days_left)} day(s) ago!")
+        elif days_left < 30:
+            print(f"🟡 Warning: {drug_name} expires in {days_left} day(s)!")
+        else:
+            print(f"🟢 Safe: {drug_name} is safe ({days_left} days remaining).")
+
+        return days_left
+    except ValueError:
+        print(f"❌ Invalid expiry date format for {drug_name}: '{expiry_str}'. ")
+        return None
+
+def scan_patient_expiries(patient_record: dict) -> None:
+    """
+    Scans a patient record dictionary for any key containing ''expiry' 
+    and triggers check_drug_expiry automatically.
+    """
+    for key, value in patient_record.items():
+        if "expiry" in key.lower() and isinstance(value, str):
+            drug_label = key.replace("_", " ").title()
+            check_drug_expiry(drug_label, value)

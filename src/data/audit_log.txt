@@ -15,3 +15,12 @@
 >>>>>>> 8a81493dd72a849a0a0b9493c0457fb6cbb5b295
 [2026-07-18 13:35:17] Registered ADAMS MARYJOY as NHIS-0001 to Labour Ward [Triage: YELLOW].
 [2026-08-12 21:15:57] System shut down normally by user.
+[2026-08-14 21:00:48] System shut down normally by user.
+[2026-08-14 21:03:18] System shut down normally by user.
+[2026-08-14 21:07:32] ✅ [Backup] Registry copied to: {dest_path.name}
+[2026-08-14 21:07:33] System shut down normally by user.
+[2026-08-14 21:07:54] ✅ [Backup] Registry copied to: {dest_path.name}
+[2026-08-14 21:07:54] System shut down normally by user.
+[2026-08-14 22:13:31] Registered EZE IKENNA as NHIS-0002 to Children Ward [Triage: YELLOW].
+[2026-08-14 22:22:40] Registered ADA AMAKA as NHIS-0003 to Children Ward [Triage: YELLOW].
+[2026-08-15 11:48:55] Registered SANDRA EMMANUEL as NHIS-0004 to Outpatient Ward [Triage: GREEN] Age: 34, DoB: 35.

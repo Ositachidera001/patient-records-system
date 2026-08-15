@@ -9,5 +9,33 @@
         "allergies": [
             "dust"
         ]
+    },
+    "NHIS-0002": {
+        "name": "Eze Ikenna",
+        "age": 45,
+        "nhis_number": "NHIS-0002",
+        "ward": "children",
+        "triage": "yellow",
+        "admission_status": true,
+        "allergies": []
+    },
+    "NHIS-0003": {
+        "name": "Ada Amaka",
+        "age": 24,
+        "nhis_number": "NHIS-0003",
+        "ward": "children",
+        "triage": "yellow",
+        "admission_status": true,
+        "allergies": []
+    },
+    "NHIS-0004": {
+        "name": "Sandra Emmanuel",
+        "age": 34,
+        "date_of_birth": 35,
+        "nhis_number": "NHIS-0004",
+        "ward": "outpatient",
+        "triage": "green",
+        "admission_status": true,
+        "allergies": []
     }
 }

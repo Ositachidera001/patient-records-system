@@ -59,8 +59,8 @@ def load_registry(filepath=registry_file):
 def log_action(action_description):
     """Append a timestamped entry to the medical audit log. Returns True/False."""
     try:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open(audit_log_file, "a") as f:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(audit_log_file, "a", encoding="utf-8") as f:
             f.write(f"[{timestamp}] {action_description}\n")
         return True
     except Exception as e:
