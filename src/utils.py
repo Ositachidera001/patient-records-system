@@ -75,7 +75,7 @@ def calculate_patient_age(birth_date_str : str) -> tuple[int, str]:
         # if today < birthday_this_year:
         #     age -= 1
         # return age
-        adjusted_age = age -1, birth_date_str if today < birthday_this_year else age
+        adjusted_age = (age -1) if today < birthday_this_year else age
         return adjusted_age, birth_date_str
     except ValueError:
         raise ValueError(f"Invalid date format '{birth_date_str}' -- usr YYYY-MM-DD")
