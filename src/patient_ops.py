@@ -21,6 +21,7 @@ from config import WIDTH, TRIAGE_INFO, VALID_TRIAGE_COLOURS, registry_file
 from file_manager import save_registry, log_action, backup_registry, full_backup, archive_old_backups, get_disk_status
 from models import Patient, PaediatricPatient
 from utils import print_patient_table, calculate_patient_age
+from validators import validate_nhis
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -115,6 +116,21 @@ def register_new_patient(registry):
     allergies = [a.strip() for a in allergy_input.split(",") if a.strip()] if allergy_input else []
 
     nhis_id = generate_next_nhis(registry)
+
+    # --- validate the NHIS ID before it ever touches the registry -----
+    # Even though nhis_id came from OUR OWN generate_next_nhis() function
+    # (not raw user typing), we still validate it here. This is a
+    # defensive-programming habit: don't assume data is clean just
+    # because you trust the code that produced it -- validate at the
+    # boundary where the data is ABOUT TO BE STORED, not just at the
+    # boundary where a human typed something. If generate_next_nhis()
+    # is ever changed, or a future menu option lets staff type a manual
+    # NHIS number instead of auto-generating one, this same check
+    # protects the registry either way.
+    if not validate_nhis(nhis_id):
+        print(f"❌ Registration failed: '{nhis_id}' is not a valid NHIS "
+              f"number (expected format NHIS-XXXX, e.g. NHIS-0001).")
+        return
 
     # --- build the actual OOP Patient object -------------------------
     patient = Patient(name, age, date_of_birth, nhis_id, ward, triage)
