@@ -22,6 +22,7 @@ from file_manager import save_registry, log_action, backup_registry, full_backup
 from models import Patient, PaediatricPatient
 from utils import print_patient_table, calculate_patient_age
 from validators import validate_nhis
+from api_client import lookup_drug
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -438,3 +439,42 @@ def search_patient_by_name(registry):
 
     print(f"\n🔎 {len(matches)} match(es) found:")
     print_patient_table(matches)
+
+def menu_drug_lookup(registry):
+    """Option 13: query OpenFDA for information about a drug by name.
+
+    `registry` is accepted (like every other menu action, so main.py can
+    call every action the same way: action(registry)) but isn't actually
+    used here -- this lookup is a reference tool, not something that
+    reads or writes patient data. Keeping the same signature as every
+    other menu function matters more than trimming an unused parameter:
+    it means main.py's menu_actions dict never needs a special case.
+    """
+    drug_name = input("\nEnter drug name to look up (brand or generic): ").strip()
+    if not drug_name:
+        print("⚠️ Empty search — nothing to look for.")
+        return
+
+    print(f"\n🔎 Searching OpenFDA for '{drug_name}'...")
+    results = lookup_drug(drug_name, limit=3)
+
+    if not results:
+        # lookup_drug() already printed the specific reason (network
+        # failure, no match, etc.) -- nothing more to add here.
+        return
+
+    print("\n" + "-" * WIDTH)
+    print(f"{'Brand Name':<20}{'Generic Name':<20}")
+    print("-" * WIDTH)
+    for drug in results:
+        print(f"{drug['brand_name']:<20}{drug['generic_name']:<20}")
+    print("-" * WIDTH)
+
+    # Show full purpose/warnings for each result underneath the table --
+    # these fields are often long free-text, so a fixed-width table
+    # column would just truncate them illegibly.
+    for drug in results:
+        print(f"\n💊 {drug['brand_name']} ({drug['generic_name']})")
+        print(f"   Purpose : {drug['purpose']}")
+        print(f"   Warnings: {drug['warnings']}")
+    print("-" * WIDTH)

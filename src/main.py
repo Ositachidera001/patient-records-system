@@ -8,6 +8,7 @@ from patient_ops import (
     menu_add_allergies, menu_update_fields, transfer_to_new_ward,
     discharge_patient, census_summary, system_status, end_system,
     look_up_patient, search_patient_by_name, schedule_appointment,
+    menu_drug_lookup,
 )
 from config import WIDTH
 
@@ -28,6 +29,7 @@ def main():
         10: look_up_patient,
         11: schedule_appointment,
         12: end_system,
+        13: menu_drug_lookup,
     }
 
     while True:
@@ -45,9 +47,9 @@ def main():
         print("9.  Search patients by name")
         print("10. Look up full patient details")
         print("11. Schedule Next Appointment for Patient")
-        print("12. Save and close the program")
+        print("13. Look up drug information")
 
-        choice = safe_int_input("\nEnter selection (1-12): ")
+        choice = safe_int_input("\nEnter selection (1-13): ")
         action = menu_actions.get(choice)
 
         if action:
