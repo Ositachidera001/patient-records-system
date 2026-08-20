@@ -30,6 +30,7 @@ APIS USED IN THIS FILE
 """
 import requests
 import time
+import json
 
 def get_country_info(country_name: str) -> dict | None:
     """fetch basic health-relevant country information from the REST Countries API.
@@ -38,7 +39,7 @@ def get_country_info(country_name: str) -> dict | None:
     Returns a dict with name, population, capital, region, and languages.
     Returns None on any error.
     """
-    rest_country_api_key="rc_live_750f428588ba4ca1823e2632f0aae0d5"
+    rest_country_api_key=os.environ.get("REST_COUNTRIES_API_KEY")
     headers = {'Authorization': f'Bearer {rest_country_api_key}'}
     url = f"https://api.restcountries.com/countries/v5?q={country}"
 
@@ -47,7 +48,8 @@ def get_country_info(country_name: str) -> dict | None:
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
 
-        data = response.json()
+        data = json.dumps(response.json(), indent=2) 
+
         country = data[0]
 
         return {"name": country.get["name"]["common"],
