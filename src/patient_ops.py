@@ -23,6 +23,7 @@ from models import Patient, PaediatricPatient
 from utils import print_patient_table, calculate_patient_age
 from validators import validate_nhis
 from api_client import lookup_drug
+from news_scraper import scrape_health_books, scrape_health_quotes, save_quotes_to_json, load_quotes_from_json
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -478,3 +479,31 @@ def menu_drug_lookup(registry):
         print(f"   Purpose : {drug['purpose']}")
         print(f"   Warnings: {drug['warnings']}")
     print("-" * WIDTH)
+
+def menu_health_qoutes(registry):
+    """option 14: show saved health quotes, or scrape fresh ones if no saved exists yet.
+    """
+    if saved := load_quotes_from_json():
+        quotes = saved['quotes']
+        print(f"\n 📜 Showing saved quotes from {saved['scraped_at']}")
+        for quote in quotes:
+            print(f"\n\"{quote['text']}\n -- {quote['author']}")
+            print(f" tags: {','.join(quote.get('tags'))}")
+            print(f"\n\U0001F4DA Health-related books:")   
+    else:
+        print(f"\n 📜 No saved quotes found -- scraping fresh from the web...")
+        if quotes := scrape_health_quotes(page_number=safe_int_input(input("Enter number of page. Click enter to use default: "))):
+            save_quotes_to_json(quotes)
+            for quote in quotes:
+                print(f"\n\"{quote['text']}\n -- {quote['author']}")
+                print(f" tags: {','.join(quote.get('tags'))}")
+                print(f"\n\U0001F4DA Health-related books:")
+        else:
+            print(f"No health-related quotes available right now.")
+        if books := scrape_health_books():
+            for book in books:
+                print(f"{book['title']} -- \u00a3{float(book['price']):.2f}")
+        else:
+            print(f"No matching books found right now.")
+
+
