@@ -18,17 +18,22 @@ import os
 from pathlib import Path
 
 from config import WIDTH, TRIAGE_INFO, VALID_TRIAGE_COLOURS, registry_file
-from file_manager import save_registry, log_action, backup_registry, full_backup, archive_old_backups, get_disk_status
+from file_manager import (save_registry, log_action, backup_registry, full_backup, 
+archive_old_backups, get_disk_status, export_registry_to_csv, import_patients_from_csv)
 from models import Patient, PaediatricPatient
 from utils import print_patient_table, calculate_patient_age
 from validators import validate_nhis
 from api_client import lookup_drug
 from news_scraper import scrape_health_books, scrape_health_quotes, save_quotes_to_json, load_quotes_from_json
 
+
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 REGISTRY_FILE = DATA_DIR / "registry.json"
 BACKUP_ROOT = BASE_DIR / "backups"
+CSV_SRC = BASE_DIR.parent
+CSV_DIR = CSV_SRC / "docs"
+CSV_FILE = CSV_DIR / "sample_transfer·csv"
 
 def safe_int_input(prompt):
     """Force a valid integer selection, retrying forever on bad input.
@@ -492,7 +497,7 @@ def menu_health_qoutes(registry):
             print(f"\n\U0001F4DA Health-related books:")   
     else:
         print(f"\n 📜 No saved quotes found -- scraping fresh from the web...")
-        if quotes := scrape_health_quotes(page_number=safe_int_input(input("Enter number of page. Click enter to use default: "))):
+        if quotes := scrape_health_quotes():
             save_quotes_to_json(quotes)
             for quote in quotes:
                 print(f"\n\"{quote['text']}\n -- {quote['author']}")
@@ -506,4 +511,27 @@ def menu_health_qoutes(registry):
         else:
             print(f"No matching books found right now.")
 
+def menu_export_csv(registry):
+    """
+    Option 15: export the whole registry to a timestamped CSV file, 
+    for handing off to the government health authority (or any other Excel-using recipient).
+""" 
+    if not registry:
+        print("⚠️ Registry is empty — nothing to export.")
+        return
+# Exports go into their own sub-folder inside data/, so a growing 
+# pile of CSV snapshots never gets mixed in with registry.json or the audit log. 
+    export_dir = DATA_DIR / "exports" 
+    filepath = export_registry_to_csv(registry, export_dir)
+    if filepath: log_action(f"📤 Exported {len(registry)} patient(s) to CSV: {filepath.name}")
 
+def menu_import_csv(registry):
+    """
+    option 16: import csv file of transferred patient from other hospital.
+    After validation, merges valid rows into the registry.
+    """
+    csv_filepathb = CSV_FILE
+    if report := import_patients_from_csv(csv_filepathb, registry):
+        return report
+    else:
+        print("No csv to import")

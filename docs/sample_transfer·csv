@@ -1,0 +1,6 @@
+name,age,date_of_birth,nhis_number,ward,triage,allergies
+Chidinma Obi,29,1997-03-14,NHIS-9001,maternity,green,Penicillin
+Tunde Bakare,54,1972-08-02,NHIS-9002,cardiology,red,
+,41,1985-01-10,NHIS-9003,surgery,yellow,Latex
+Amara Nwosu,thirty,1994-06-21,NHIS-9004,outpatient,green,
+Ifeoma Chukwu,8,2018-02-05,,paediatrics,purple,

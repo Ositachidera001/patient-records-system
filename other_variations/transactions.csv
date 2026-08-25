@@ -1,0 +1,13 @@
+date,description,amount,type
+2026-08-01,Salary payment - August,450000.0,credit
+2026-08-02,Rent payment,120000.0,debit
+2026-08-03,Grocery shopping - Shoprite,18500.5,debit
+2026-08-04,Electricity bill (PHCN),9200.0,debit
+2026-08-05,Transfer from Chidi,25000.0,credit
+2026-08-06,Fuel station - NNPC,15000.0,debit
+2026-08-07,Freelance payment - logo design,60000.0,credit
+2026-08-08,Internet subscription,18000.0,debit
+2026-08-09,Restaurant - Yellow Chilli,12300.75,debit
+2026-08-10,Refund - returned item,7500.0,credit
+2026-08-11,Data subscription,3500.0,debit
+2026-08-12,Withdrawal - ATM,50000.0,debit

@@ -68,7 +68,7 @@ BOOKS_BASE_URL = "https://books.toscrape.com"
 # The tags we're filtering quotes for. Lowercased here so every comparison
 # later can also lowercase the scraped tag text and compare like-for-like,
 # without worrying about "Science" vs "science" capitalization mismatches.
-HEALTH_RELATED_TAGS = ("science", "medicine", "health")
+HEALTH_RELATED_TAGS = ("science", "medicine", "health", "inspirational")
 
 # Same idea, but for matching against BOOK TITLES instead of quote tags.
 HEALTH_RELATED_TITLE_WORDS = ("health", "medicine", "nursing")
@@ -85,7 +85,7 @@ QUOTES_OUTPUT_FILE = DATA_DIR / "scraped_quotes.json"
 # QUOTES SCRAPER (required)
 # ---------------------------------------------------------------------------
 
-def scrape_health_quotes(page_number = 2, max_pages=10):
+def scrape_health_quotes(max_pages=10):
     """Scrape quotes.toscrape.com and return quotes tagged with anything
     in HEALTH_RELATED_TAGS ("science", "medicine", "health").
 
@@ -106,6 +106,7 @@ def scrape_health_quotes(page_number = 2, max_pages=10):
     # quotes.toscrape.com paginates as /page/1/, /page/2/, etc. We start
     # at page 1 and keep going until either we hit max_pages, or the page
     # itself tells us there's no "next" page left.
+    page_number = 2
     while page_number <= max_pages:
         url = f"{QUOTES_BASE_URL}/page/{page_number}/"
 

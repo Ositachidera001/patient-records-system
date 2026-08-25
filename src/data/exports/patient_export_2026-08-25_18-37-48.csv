@@ -1,0 +1,7 @@
+nhis_number,name,age,date_of_birth,ward,triage,admission_status,allergies
+NHIS-0001,Adams Maryjoy,26,,labour,yellow,True,dust
+NHIS-0002,Eze Ikenna,45,,children,yellow,True,
+NHIS-0003,Ada Amaka,24,,children,yellow,True,
+NHIS-0004,Sandra Emmanuel,34,35,outpatient,green,True,
+NHIS-0005,Ani Kalu,"[23, 24]",2002-06-14,outpatient,green,True,
+NHIS-0006,Iris Faith,43,Not Provided,outpatient,green,True,

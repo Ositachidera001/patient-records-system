@@ -8,7 +8,7 @@ from patient_ops import (
     menu_add_allergies, menu_update_fields, transfer_to_new_ward,
     discharge_patient, census_summary, system_status, end_system,
     look_up_patient, search_patient_by_name, schedule_appointment,
-    menu_drug_lookup, menu_health_qoutes,
+    menu_drug_lookup, menu_health_qoutes, menu_export_csv, menu_import_csv
 )
 from config import WIDTH
 
@@ -30,7 +30,9 @@ def main():
         11: schedule_appointment,
         12: end_system,
         13: menu_drug_lookup,
-        14: menu_health_qoutes
+        14: menu_health_qoutes,
+        15: menu_export_csv,
+        16: menu_import_csv
     }
 
     while True:
@@ -50,8 +52,10 @@ def main():
         print("11. Schedule Next Appointment for Patient")
         print("13. Look up drug information")
         print("14. Read health/inspirational quotes")
+        print("15. Export Patient record as .csv")
+        print("16. Import Patient record from .csv")
 
-        choice = safe_int_input("\nEnter selection (1-14): ")
+        choice = safe_int_input("\nEnter selection (1-16): ")
         action = menu_actions.get(choice)
 
         if action:

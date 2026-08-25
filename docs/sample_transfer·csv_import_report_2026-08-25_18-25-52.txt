@@ -1,0 +1,12 @@
+Patient CSV Import Report
+========================================
+Source file : sample_transfer·csv
+Imported at : 2026-08-25 18:25:52
+
+Accepted : 2
+Rejected : 3
+
+Rejected rows:
+  Row 4 ((no name)): missing name
+  Row 5 (Amara Nwosu): invalid age 'thirty' (not a whole number)
+  Row 6 (Ifeoma Chukwu): invalid triage 'purple' (must be one of ('red', 'yellow', 'green'))

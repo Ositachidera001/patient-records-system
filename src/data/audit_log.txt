@@ -27,4 +27,4 @@
 [2026-08-15 13:05:39] Registered ANI KALU as NHIS-0005 to Outpatient Ward [Triage: GREEN] Age: (23, 24), DoB: 2002-06-14.
 [2026-08-15 13:07:33] Registered IRIS FAITH as NHIS-0006 to Outpatient Ward [Triage: GREEN] Age: 43, DoB: Not Provided.
 [2026-08-15 13:10:34] ✅ [Backup] Registry copied to: {dest_path.name}
-[2026-08-15 13:10:34] System shut down normally by user.
+[2026-08-15 13:10:34] System shut down normally by user.[2026-08-25 18:37:48] 📤 Exported 6 patient(s) to CSV: patient_export_2026-08-25_18-37-48.csv

@@ -9,15 +9,20 @@ import json
 from datetime import datetime
 import os
 import shutil
+import csv
 
 from pathlib import Path
 
-from config import registry_file, audit_log_file, DATA_DIR
+from config import registry_file, audit_log_file, DATA_DIR, VALID_TRIAGE_COLOURS
+from validators import validate_nhis
 
 # Create the data/ directory up front so save_registry() and log_action()
 # never fail just because the folder doesn't exist yet.
 os.makedirs(DATA_DIR, exist_ok=True)
-
+CSV_EXPORT_FIELDNAMES = [
+    "nhis_number", "name", "age", "date_of_birth", "ward",
+    "triage", "admission_status", "allergies",
+]
 
 def save_registry(registry, filepath=registry_file):
     """Save the patient registry to a JSON file. Returns True/False on success."""
@@ -182,3 +187,291 @@ def get_disk_status(path: Path) -> dict:
     except Exception as err:
         print(f"❌ [Disk Report Error] Could not read disk stats: {err}")
         return {}
+
+# ---------------------------------------------------------------------------
+# CSV EXPORT / IMPORT (Lesson 22A)
+# ---------------------------------------------------------------------------
+
+def export_registry_to_csv(registry, output_dir):
+    """Export every patient in the registry to a timestamped CSV file.
+
+    Args:
+        registry (dict): the patient registry, {nhis_number: patient_dict}.
+        output_dir (str | Path): folder to write the CSV into. Created
+            automatically if it doesn't exist yet.
+
+    Returns:
+        Path | None: the path of the CSV file written, or None if the
+        export failed (e.g. permissions problem). Mirrors save_registry()'s
+        style: a value the caller can check, rather than an exception the
+        caller has to remember to catch.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Timestamped filename: every export gets its own file rather than
+    # silently overwriting the last one, so the hospital can keep a
+    # history of exactly what was handed to the health authority and when.
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filepath = output_dir / f"patient_export_{timestamp}.csv"
+
+    try:
+        # newline="": REQUIRED by Python's own csv module docs when
+        # writing CSV files. Without it, on Windows, text-mode file
+        # writing translates every "\n" the csv module writes into
+        # "\r\n" ITSELF -- but the csv module ALSO writes "\r\n" as its
+        # own row terminator, so the two translations stack and you get
+        # a doubled "\r\r\n" at the end of every row. Opening with
+        # newline="" disables Python's automatic translation and lets
+        # the csv module handle line endings entirely on its own,
+        # correctly, on every platform.
+        #
+        # encoding="utf-8": patient names, guardian names, or allergy
+        # entries may contain non-ASCII characters (accented letters,
+        # etc.). Explicitly requesting UTF-8 means the file opens
+        # correctly regardless of what the OS's default encoding
+        # happens to be (which varies between Windows/macOS/Linux).
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            # DictWriter maps EACH ROW from a dict (keyed by column name)
+            # into the correct CSV columns, in fieldnames order -- so we
+            # don't have to manually track which value goes in which
+            # column position ourselves.
+            writer = csv.DictWriter(f, fieldnames=CSV_EXPORT_FIELDNAMES)
+            writer.writeheader()
+
+            for nhis_number, patient_data in registry.items():
+                writer.writerow({
+                    "nhis_number": patient_data.get("nhis_number", nhis_number),
+                    "name": patient_data.get("name", ""),
+                    "age": patient_data.get("age", ""),
+                    "date_of_birth": patient_data.get("date_of_birth", ""),
+                    "ward": patient_data.get("ward", ""),
+                    "triage": patient_data.get("triage", ""),
+                    "admission_status": patient_data.get("admission_status", ""),
+                    # allergies is stored as a LIST in the registry, e.g.
+                    # ["Penicillin", "Latex"] -- a single CSV cell can
+                    # only hold plain text, so we flatten the list into
+                    # ONE string, joined with " | ". That separator is
+                    # deliberately unusual so it's very unlikely to ever
+                    # collide with a real allergy name that itself
+                    # contains a comma or semicolon.
+                    "allergies": " | ".join(patient_data.get("allergies", [])),
+                })
+
+        print(f"✅ Exported {len(registry)} patient(s) to {filepath}")
+        return filepath
+
+    except OSError as e:
+        print(f"❌ CSV export failed: {e}")
+        return None
+
+
+def _generate_next_nhis_for_import(registry):
+    """Auto-generate the next NHIS-XXXX ID for a CSV row that arrived
+    with no usable NHIS number of its own.
+
+    NOTE ON DUPLICATION: patient_ops.py already has a near-identical
+    generate_next_nhis() function. It isn't reused here on purpose --
+    patient_ops.py imports FROM file_manager.py (for save_registry,
+    log_action, etc.), so if file_manager.py imported back FROM
+    patient_ops.py, Python would hit a circular import (each module
+    would need the other to finish loading before it could finish
+    loading itself). Keeping this tiny duplicate here is a small,
+    deliberate trade-off to avoid restructuring the whole project's
+    import graph for one helper function.
+    """
+    numeric_ids = []
+    for key in registry.keys():
+        try:
+            numeric_ids.append(int(key.split("-")[1]))
+        except (IndexError, ValueError):
+            continue
+
+    next_id = max(numeric_ids) + 1 if numeric_ids else 1
+    return f"NHIS-{next_id:04d}"
+
+
+def import_patients_from_csv(filepath, registry):
+    """Read a CSV of incoming patients (e.g. a transfer list from another
+    hospital), clean and validate each row, and merge every VALID row
+    straight into `registry`. Invalid rows are skipped and reported,
+    never allowed to corrupt the registry.
+
+    Expected CSV columns (case-sensitive header names):
+        name, age, triage, ward, date_of_birth, nhis_number, allergies
+    Only "name", "age", and "triage" are REQUIRED per the lesson spec --
+    the rest are optional and get sensible defaults if missing.
+
+    Args:
+        filepath (str | Path): path to the CSV file to import.
+        registry (dict): the patient registry to merge accepted rows
+            into, IN PLACE (this function mutates the dict you pass in,
+            the same way save_registry()'s callers already expect
+            "registry" to be a live, shared dictionary).
+
+    Returns:
+        dict: {
+            "accepted": int,
+            "rejected": list[tuple[int, str, list[str]]],  # (row_number, name, reasons)
+            "report_path": Path | None,   # BONUS: where the text report was saved
+        }
+        Returns {"accepted": 0, "rejected": [], "report_path": None} if
+        the file itself couldn't be opened at all -- this function never
+        raises out to its caller.
+    """
+    filepath = Path(filepath)
+    accepted_count = 0
+    rejected_rows = []  # each entry: (row_number, name_for_display, [reasons])
+
+    try:
+        # newline="" here too -- required by the csv module on the READING
+        # side as well as writing, for the same "don't let two different
+        # layers both try to normalise line endings" reason explained in
+        # export_registry_to_csv() above.
+        with open(filepath, "r", newline="", encoding="utf-8") as f:
+            # DictReader turns each CSV row into a dict keyed by the
+            # HEADER ROW's column names, e.g. {"name": "Jane Doe",
+            # "age": "34", ...} -- so we access fields by name instead of
+            # by a fragile numeric column position.
+            reader = csv.DictReader(f)
+
+            # enumerate(..., start=2): row 1 is the header, so the first
+            # actual DATA row is row 2 in a text editor / Excel -- this
+            # keeps the row numbers we report to the user matching what
+            # they'd see if they opened the CSV themselves.
+            for row_number, raw_row in enumerate(reader, start=2):
+                reasons = []
+
+                # --- CLEAN every field up front (strip/title/lower) ----
+                # .get(..., "") guards against a CSV that's missing a
+                # column entirely (raw_row.get would otherwise return
+                # None, and None has no .strip() method).
+                name = (raw_row.get("name") or "").strip().title()
+                age_raw = (raw_row.get("age") or "").strip()
+                triage = (raw_row.get("triage") or "").strip().lower()
+                ward = (raw_row.get("ward") or "outpatient").strip().lower()
+                date_of_birth = (raw_row.get("date_of_birth") or "").strip()
+                nhis_number = (raw_row.get("nhis_number") or "").strip().upper()
+                allergies_raw = (raw_row.get("allergies") or "").strip()
+                # Mirrors the " | " separator used by export_registry_to_csv(),
+                # so a file we EXPORTED can also be re-IMPORTED correctly.
+                allergies = (
+                    [a.strip() for a in allergies_raw.split("|") if a.strip()]
+                    if allergies_raw else []
+                )
+
+                # --- VALIDATE name ---------------------------------------
+                if not name:
+                    reasons.append("missing name")
+
+                # --- VALIDATE age -----------------------------------------
+                age = None
+                if not age_raw:
+                    reasons.append("missing age")
+                else:
+                    try:
+                        age = int(age_raw)
+                        if age < 0 or age > 130:
+                            reasons.append(f"age out of realistic range ({age})")
+                    except ValueError:
+                        # int("thirty") raises ValueError -- this catches
+                        # any age field that isn't a plain whole number.
+                        reasons.append(f"invalid age '{age_raw}' (not a whole number)")
+
+                # --- VALIDATE triage ---------------------------------------
+                if triage not in VALID_TRIAGE_COLOURS:
+                    reasons.append(
+                        f"invalid triage '{triage}' (must be one of {VALID_TRIAGE_COLOURS})"
+                    )
+
+                if reasons:
+                    # SKIP this row -- do not touch the registry at all --
+                    # and record WHY, for the report. `continue` jumps
+                    # straight to the next row of the for loop.
+                    rejected_rows.append((row_number, name or "(no name)", reasons))
+                    continue
+
+                # --- Resolve the NHIS number -------------------------------
+                # Accept the incoming hospital's NHIS number IF it's both
+                # correctly formatted AND not already used by someone else
+                # in our registry (a collision would silently overwrite an
+                # existing patient's record, which is exactly the kind of
+                # mistake we validate to prevent). Otherwise, generate a
+                # fresh one, the same way a new walk-in registration would.
+                if not nhis_number or not validate_nhis(nhis_number) or nhis_number in registry:
+                    nhis_number = _generate_next_nhis_for_import(registry)
+
+                registry[nhis_number] = {
+                    "name": name,
+                    "age": age,
+                    "date_of_birth": date_of_birth,
+                    "nhis_number": nhis_number,
+                    "ward": ward,
+                    "triage": triage,
+                    "admission_status": True,
+                    "allergies": allergies,
+                }
+                accepted_count += 1
+
+    except FileNotFoundError:
+        print(f"❌ Import failed: file not found at {filepath}")
+        return {"accepted": 0, "rejected": [], "report_path": None}
+    except OSError as e:
+        print(f"❌ Import failed: {e}")
+        return {"accepted": 0, "rejected": [], "report_path": None}
+
+    # --- Print the summary to the terminal --------------------------------
+    print(f"\n📥 CSV Import Summary — {filepath.name}")
+    print(f"   Accepted: {accepted_count}")
+    print(f"   Rejected: {len(rejected_rows)}")
+    for row_number, name, reasons in rejected_rows:
+        print(f"   ❌ Row {row_number} ({name}): {', '.join(reasons)}")
+
+    # --- BONUS: save the same report as a text file, next to the CSV ------
+    report_path = _save_import_report(filepath, accepted_count, rejected_rows)
+
+    return {
+        "accepted": accepted_count,
+        "rejected": rejected_rows,
+        "report_path": report_path,
+    }
+
+
+def _save_import_report(source_csv_path, accepted_count, rejected_rows):
+    """BONUS: write the import results to a .txt file in the SAME folder
+    as the CSV that was imported, so there's a permanent, readable record
+    of exactly what happened -- useful for the hospital to show the
+    sending facility which rows need correcting and why.
+
+    Returns:
+        Path | None: where the report was saved, or None if saving failed.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    report_path = source_csv_path.parent / f"{source_csv_path.stem}_import_report_{timestamp}.txt"
+
+    lines = [
+        "Patient CSV Import Report",
+        "=" * 40,
+        f"Source file : {source_csv_path.name}",
+        f"Imported at : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+        f"Accepted : {accepted_count}",
+        f"Rejected : {len(rejected_rows)}",
+        "",
+    ]
+
+    if rejected_rows:
+        lines.append("Rejected rows:")
+        for row_number, name, reasons in rejected_rows:
+            lines.append(f"  Row {row_number} ({name}): {', '.join(reasons)}")
+    else:
+        lines.append("No rejected rows — every row imported cleanly.")
+
+    try:
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        print(f"📝 Import report saved to {report_path}")
+        return report_path
+    except OSError as e:
+        print(f"⚠ Could not save import report: {e}")
+        return None
