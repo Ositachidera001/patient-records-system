@@ -8,15 +8,15 @@ to move — no more guessing whether "data/" means "src/data" or
 "project-root/data".
 """
 import os
-
+from pathlib import Path
 # os.path.dirname(__file__) gives the folder THIS file lives in (src/),
 # no matter what directory the user launched python from.
 # os.path.abspath() makes it a full, unambiguous path.
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = Path(__file__).parent
 
-DATA_DIR = os.path.join(BASE_DIR, "data")
-registry_file = os.path.join(DATA_DIR, "registry.json")
-audit_log_file = os.path.join(DATA_DIR, "audit_log.txt")
+DATA_DIR = BASE_DIR / "data"
+registry_file = DATA_DIR / "registry.json"
+audit_log_file = DATA_DIR / "audit_log.txt"
 
 # Console table width, used by patient_ops.py and utils.py
 WIDTH = 60
@@ -35,3 +35,7 @@ TRIAGE_RANK = {"red": 1, "yellow": 2, "green": 3}
 
 # The only triage values the system will accept.
 VALID_TRIAGE_COLOURS = ("red", "yellow", "green")
+# print(BASE_DIR)
+# print(DATA_DIR)
+print(registry_file)
+print(audit_log_file)
