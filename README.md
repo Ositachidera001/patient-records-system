@@ -1,22 +1,38 @@
 # 🏥 Patient Records System
 
-**Domain badge: 🏥 Health IT**
+A command-line patient registry and triage system for a hospital front desk. Patients are registered with a triage colour (RED/YELLOW/GREEN), tracked through wards, and can be transferred, updated, or discharged — with every change written straight to disk and to an audit log.
 
-## 📋 Description
+---
 
-A command-line patient registry and triage system for a hospital front desk.
-Patients are registered with a triage colour (RED/YELLOW/GREEN), tracked
-through wards, and can be transferred, updated, or discharged — with every
-change written straight to disk and to an audit log.
+## 📖 About This Project
 
-This started as a Lesson 9 (Functions) exercise and has been rebuilt as the
-final capstone project, folding in OOP (Lesson 14), error handling
-(Lesson 11), and file persistence (Lesson 12) into one production-shaped app.
+This is a real, in-progress application — not a finished showcase. It's being built incrementally, lesson by lesson, as I work through the **MDR-002 Full-Stack + AI Integration curriculum** (started June 2026). Each concept is learned generically first, then applied here to the actual system, so this repo contains both the growing patient-registry application itself and the supporting lesson exercises that shaped it along the way.
+
+It started as a **Lesson 9 (Functions)** exercise and has since been rebuilt to fold in OOP (**Lesson 14**), error handling (**Lesson 11**), and file persistence (**Lesson 12**) into one production-shaped app — with more capability arriving as the curriculum continues.
+
+---
+
+## ⚙️ Features / Menu Options
+
+| # | Action |
+|---|--------|
+| 1 | View all patients — table sorted RED → YELLOW → GREEN |
+| 2 | Register a new patient (auto NHIS ID, validated age & triage) |
+| 3 | Add allergies (deduplicated) |
+| 4 | Update patient name or triage level |
+| 5 | Transfer patient to a new ward |
+| 6 | Discharge patient |
+| 7 | Ward census + triage risk matrix (with timestamp) |
+| 8 | System status (registry size + data file check) |
+| 9 | Look up one patient's full details |
+| 10 | Search patients by (partial) name |
+| 11 | Save and quit |
+
+---
 
 ## 🏗️ Architecture
 
-The project is a proper `src/` package, split by responsibility — no logic
-lives in the project root, and no single file is a monolith:
+A proper `src/` package, split by responsibility — no logic lives in the project root, and no single file is a monolith:
 
 ```
 patient-records-system/
@@ -28,18 +44,34 @@ patient-records-system/
 │   ├── utils.py           # table formatting / display helpers
 │   ├── patient_ops.py     # every menu action lives here
 │   ├── main.py            # imports + menu wiring + the while-True loop ONLY
-│   └── data/              # registry.json + audit_log.txt (created at runtime)
+│   └── data/               # registry.json + audit_log.txt (created at runtime)
 ├── test_models.py         # standalone OOP demo/verification script
 ├── .gitignore
 └── README.md
 ```
 
-`config.py` builds every path from `os.path.dirname(os.path.abspath(__file__))`,
-so it always resolves relative to `src/` itself — it doesn't matter whether
-you launch the app from the project root, from inside `src/`, or from
-somewhere else entirely.
+`config.py` builds every path from `os.path.dirname(os.path.abspath(__file__))`, so it always resolves relative to `src/` itself — it doesn't matter whether you launch the app from the project root, from inside `src/`, or from somewhere else entirely.
 
-## 🚀 How to Run
+---
+
+## 🧰 Techniques Used
+
+| Technique | Lesson Introduced | Where It Lives |
+|---|---|---|
+| Functions, default/keyword args | Lesson 9 (Functions) | `patient_ops.py`, `multi_domain_functions.py` |
+| Classes, inheritance, `super()`, dunder methods | Lesson 14 (OOP) | `models.py` — `Patient` → `PaediatricPatient` |
+| `*args` | Lesson 14 (OOP) | `Patient.add_allergy(*new_allergies)` |
+| `**kwargs` | Lesson 14 (OOP) / 9 | `update_patient_fields(patient_dict, **kwargs)` |
+| `try/except/finally`, custom `raise ValueError` | Lesson 11 (Error Handling) | `patient_ops.py` (age validation, `census_summary`) |
+| `while True` input-retry loops | Lesson 11 (Error Handling) | `safe_int_input()`, age prompt |
+| JSON file persistence | Lesson 12 (File I/O) | `file_manager.py` (`save_registry` / `load_registry`) |
+| Timestamped audit logging | Lesson 12 (File I/O) | `file_manager.log_action()` |
+| `sorted()` with a `key=` function | Lesson 9 (Functions) | `utils.print_patient_table()` — RED sorts first |
+| Sets, dict comprehensions | Lesson 9/11 | `census_summary()` occupied wards, `search_patient_by_name()` |
+
+---
+
+## 🚀 Installation & How to Run
 
 ```bash
 git clone <this-repo>
@@ -47,44 +79,15 @@ cd patient-records-system
 python src/main.py
 ```
 
-To run the standalone OOP verification script instead:
+Run the standalone OOP verification script instead:
 
 ```bash
 python test_models.py
 ```
 
-## 🧰 Technologies Used
+---
 
-| Technique                                   | Lesson Introduced        | Where it lives                                   |
-|----------------------------------------------|---------------------------|---------------------------------------------------|
-| Functions, default/keyword args              | Lesson 9 (Functions)      | `patient_ops.py`, `multi_domain_functions.py`     |
-| Classes, inheritance, `super()`, dunder methods | Lesson 14 (OOP)         | `models.py` — `Patient` → `PaediatricPatient`     |
-| `*args`                                       | Lesson 14 (OOP)           | `Patient.add_allergy(*new_allergies)`             |
-| `**kwargs`                                    | Lesson 14 (OOP) / 9      | `update_patient_fields(patient_dict, **kwargs)`   |
-| `try/except/finally`, custom `raise ValueError` | Lesson 11 (Error Handling) | `patient_ops.py` (age validation, `census_summary`) |
-| `while True` input-retry loops                | Lesson 11 (Error Handling) | `safe_int_input()`, age prompt                    |
-| JSON file persistence                         | Lesson 12 (File I/O)      | `file_manager.py` (`save_registry`/`load_registry`) |
-| Timestamped audit logging                     | Lesson 12 (File I/O)      | `file_manager.log_action()`                       |
-| `sorted()` with a `key=` function             | Lesson 9 (Functions)      | `utils.print_patient_table()` — RED sorts first   |
-| Sets, dict comprehensions                     | Lesson 9/11               | `census_summary()` occupied wards, `search_patient_by_name()` |
-
-## ⚙️ Menu Options
-
-| #  | Action |
-|--- |--------|
-| 1  | View all patients — table sorted RED → YELLOW → GREEN |
-| 2  | Register a new patient (auto NHIS ID, validated age & triage) |
-| 3  | Add allergies (deduplicated) |
-| 4  | Update patient name or triage level |
-| 5  | Transfer patient to a new ward |
-| 6  | Discharge patient |
-| 7  | Ward census + triage risk matrix (with timestamp) |
-| 8  | System status (registry size + data file check) |
-| 9  | Look up one patient's full details |
-| 10 | Search patients by (partial) name |
-| 11 | Save and quit |
-
-## 🖥️ Sample Terminal Session (screenshot)
+## 🖥️ Sample Terminal Session
 
 ```
 ⚠ No saved registry found at .../src/data/registry.json. Starting fresh.
@@ -134,40 +137,26 @@ Closing down... saving final state.
 👋 System offline.
 ```
 
+---
+
 ## 🎓 What I Learned
 
-1. **Separation of concerns beats one big file.** Splitting the same logic
-   across `config` / `models` / `file_manager` / `utils` / `patient_ops` /
-   `main` made each file small enough to reason about on its own, and made
-   `main.py` genuinely trivial — it's just wiring.
-2. **`os.path.dirname(__file__)` beats hard-coded relative paths.** Once
-   `config.py` builds its paths from its own location, the app runs the same
-   no matter what directory you launch it from — no more `src/data` vs
-   `data` guessing games.
-3. **A "sensible-looking" default can hide a real bug.** `Patient` was
-   storing `triage` as `"RED"` while `config.py`'s lookup tables used
-   `"red"` — the mismatch didn't crash anything, it just silently broke
-   sorting and the risk-matrix counts (`.get()` quietly fell back to a
-   default). It only surfaced by actually running the CLI end-to-end, not
-   just eyeballing the code — a good reminder to test integration paths,
-   not just individual functions.
-4. **`*args` and `**kwargs` earn their keep when reused.** `add_allergy(*args)`
-   let `menu_add_allergies()` reuse the same dedup logic instead of
-   re-implementing it, and `update_patient_fields(**kwargs)` turned two
-   near-duplicate update flows into one generic function with validation.
-5. **`try/except/finally` is about guarantees, not just error messages.**
-   Putting the timestamp print in `census_summary()`'s `finally` block
-   means the report always ends with a timestamp — even if something
-   above it went wrong — which is exactly the kind of guarantee an audit
-   trail needs.
-6. **Backward-compatible storage matters.** Building a real `Patient`
-   object during intake but storing `patient.to_dict()` let the app keep
-   using simple dicts (and JSON) everywhere else, without a big rewrite of
-   the persistence layer.
-7. **Package imports vs. script imports are genuinely different things.**
-   `src/__init__.py` only needs to exist for `test_models.py`'s
-   `from src.models import ...` to work; `main.py` and friends use flat
-   `from config import ...` imports because they're run as
-   `python src/main.py` (script mode), not imported as a package. Mixing
-   the two without understanding why one works and the other doesn't is a
-   very easy way to get a confusing `ModuleNotFoundError`.
+1. **Separation of concerns beats one big file.** Splitting the same logic across `config` / `models` / `file_manager` / `utils` / `patient_ops` / `main` made each file small enough to reason about on its own, and made `main.py` genuinely trivial — it's just wiring.
+2. **`os.path.dirname(__file__)` beats hard-coded relative paths.** Once `config.py` builds its paths from its own location, the app runs the same no matter what directory you launch it from — no more `src/data` vs `data` guessing games.
+3. **A "sensible-looking" default can hide a real bug.** `Patient` was storing `triage` as `"RED"` while `config.py`'s lookup tables used `"red"` — the mismatch didn't crash anything, it just silently broke sorting and the risk-matrix counts (`.get()` quietly fell back to a default). It only surfaced by actually running the CLI end-to-end, not just eyeballing the code — a good reminder to test integration paths, not just individual functions.
+4. **`*args` and `**kwargs` earn their keep when reused.** `add_allergy(*args)` let `menu_add_allergies()` reuse the same dedup logic instead of re-implementing it, and `update_patient_fields(**kwargs)` turned two near-duplicate update flows into one generic function with validation.
+5. **`try/except/finally` is about guarantees, not just error messages.** Putting the timestamp print in `census_summary()`'s `finally` block means the report always ends with a timestamp — even if something above it went wrong — which is exactly the kind of guarantee an audit trail needs.
+6. **Backward-compatible storage matters.** Building a real `Patient` object during intake but storing `patient.to_dict()` let the app keep using simple dicts (and JSON) everywhere else, without a big rewrite of the persistence layer.
+7. **Package imports vs. script imports are genuinely different things.** `src/__init__.py` only needs to exist for `test_models.py`'s `from src.models import ...` to work; `main.py` and friends use flat `from config import ...` imports because they're run as `python src/main.py` (script mode), not imported as a package. Mixing the two without understanding why one works and the other doesn't is a very easy way to get a confusing `ModuleNotFoundError`.
+
+---
+
+## 🗺️ Project Status & Roadmap
+
+Actively developed alongside the MDR-002 curriculum — expect this system to keep growing in capability (and this README to keep growing in honesty) as new lessons land.
+
+---
+
+## 👤 Author
+
+**Nwonye Ezekiel Chidera** — Registered Nurse transitioning into software/AI engineering.
