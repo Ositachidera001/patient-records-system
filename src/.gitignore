@@ -1,0 +1,18 @@
+Python
+pycache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+Virtual environments
+venv/
+env/
+.env
+IDE
+.vscode/
+.idea/
+OS files
+.DS_Store
+Thumbs.db
+OneDrive temp files
+*.tmp
