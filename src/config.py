@@ -7,7 +7,7 @@ so there is exactly one place to change if a path or constant needs
 to move — no more guessing whether "data/" means "src/data" or
 "project-root/data".
 """
-import os
+
 from pathlib import Path
 # os.path.dirname(__file__) gives the folder THIS file lives in (src/),
 # no matter what directory the user launched python from.
@@ -35,7 +35,3 @@ TRIAGE_RANK = {"red": 1, "yellow": 2, "green": 3}
 
 # The only triage values the system will accept.
 VALID_TRIAGE_COLOURS = ("red", "yellow", "green")
-# print(BASE_DIR)
-# print(DATA_DIR)
-print(registry_file)
-print(audit_log_file)

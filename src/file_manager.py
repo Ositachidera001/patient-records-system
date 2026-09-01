@@ -475,3 +475,27 @@ def _save_import_report(source_csv_path, accepted_count, rejected_rows):
     except OSError as e:
         print(f"⚠ Could not save import report: {e}")
         return None
+
+
+import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR / "data"
+EXPORTS = DATA_DIR / "exports"
+EXPORTS.mkdir(parents=True, exist_ok=True)
+file_path = EXPORTS / "patient_export_2026-08-25_18-37-48.csv"
+# print(EXPORTS)
+
+df = pd.read_csv(file_path, encoding="utf-8")
+
+TRIAGE_SCORE = {
+    "red" : 3,
+    "yellow": 2,
+    "green": 1
+    }
+df["triage_score"] = df["triage"].map(TRIAGE_SCORE)
+df2 = df.drop("allergies", axis=1)
+del df2["triage_score"]
+admission_status = df2.pop("admission_status")
+print(f"{df2} {admission_status}")
